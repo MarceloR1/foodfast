@@ -10,6 +10,8 @@ import {
   Text,
   StyleSheet
 } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { ShoppingBag, Star, Clock, MapPin, ChevronRight } from 'lucide-react-native';
 import { getCategories, getFeaturedRestaurants, Category, Restaurant } from './src/services/api';
 
 const { width } = Dimensions.get('window');
@@ -48,27 +50,24 @@ export default function App() {
     }
     loadData();
   }, []);
-
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" />
       
       {/* Aliveness Signal */}
       <View style={{ height: 2, backgroundColor: '#FBBF24', width: '100%' }} />
-      <Text style={{color: '#FBBF24', fontSize: 10, textAlign: 'center', marginTop: 10, fontWeight: 'bold'}}>
-        FOODFAST LIVE • {loading ? 'CONECTANDO...' : 'SISTEMA ONLINE'}
-      </Text>
       
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.logoContainer}>
           <View style={styles.iconBg}>
-            <Text style={{fontSize: 16}}>🛍️</Text>
+            <ShoppingBag size={20} color="#0F0F0F" />
           </View>
           <Text style={styles.logoText}>Food<Text style={{color: '#FBBF24'}}>Fast</Text></Text>
         </View>
         <TouchableOpacity style={styles.cartButton}>
-           <Text style={{fontSize: 20}}>🛒</Text>
+          <ShoppingBag size={24} color="#FFF" />
         </TouchableOpacity>
       </View>
 
@@ -78,7 +77,7 @@ export default function App() {
           <Text style={styles.heroTitle}>La comida que amas,</Text>
           <Text style={styles.heroSubtitle}>entregada al instante.</Text>
           <View style={styles.searchBar}>
-            <Text>📍</Text>
+            <MapPin size={20} color="rgba(255,255,255,0.4)" />
             <Text style={styles.searchText}>Introduce tu dirección...</Text>
           </View>
         </View>
@@ -86,7 +85,6 @@ export default function App() {
         {error && (
           <View style={styles.errorBox}>
             <Text style={styles.errorText}>⚠️ {error}</Text>
-            <Text style={{color: '#FFF', fontSize: 10, marginTop: 5, textAlign: 'center'}}>Verifica tu conexión y las variables de Supabase.</Text>
           </View>
         )}
 
@@ -131,14 +129,14 @@ export default function App() {
                   style={styles.restaurantImage} 
                 />
                 <View style={styles.ratingBadge}>
-                  <Text style={{fontSize: 12}}>⭐</Text>
+                  <Star size={14} color="#FBBF24" fill="#FBBF24" />
                   <Text style={styles.ratingText}>{res.rating}</Text>
                 </View>
                 <View style={styles.restaurantInfo}>
                   <Text style={styles.restaurantName}>{res.name}</Text>
                   <View style={styles.restaurantMeta}>
                     <View style={styles.metaItem}>
-                      <Text>🕒</Text>
+                      <Clock size={14} color="rgba(255,255,255,0.5)" />
                       <Text style={styles.metaText}>{res.time_estimate}</Text>
                     </View>
                     <Text style={styles.priceRange}>{res.price_range}</Text>
@@ -151,7 +149,8 @@ export default function App() {
           )}
         </View>
       </ScrollView>
-    </View>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
