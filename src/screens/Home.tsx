@@ -34,6 +34,10 @@ export default function Home({ onRestaurantPress, onCartPress }: Props) {
   useEffect(() => {
     async function load() {
       try {
+        if (!process.env.EXPO_PUBLIC_SUPABASE_URL || !process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY) {
+          setLoading(false);
+          return;
+        }
         const [cats, rests] = await Promise.all([
           getCategories().catch(() => []),
           getFeaturedRestaurants().catch(() => []),
@@ -66,6 +70,22 @@ export default function Home({ onRestaurantPress, onCartPress }: Props) {
     outputRange: ['rgba(8,8,8,0)', 'rgba(8,8,8,1)'],
     extrapolate: 'clamp',
   });
+
+  if (!process.env.EXPO_PUBLIC_SUPABASE_URL || !process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#080808', justifyContent: 'center', alignItems: 'center', padding: 40 }}>
+        <Text style={{ fontSize: 50, marginBottom: 20 }}>⚠️</Text>
+        <Text style={{ color: '#EF4444', fontSize: 20, fontWeight: '900', textAlign: 'center', marginBottom: 10 }}>Faltan Variables de Entorno</Text>
+        <Text style={{ color: '#FFF', fontSize: 14, textAlign: 'center', opacity: 0.7, lineHeight: 22 }}>
+          La app no puede conectar con Supabase. En Netlify, debes agregar estas variables:
+        </Text>
+        <View style={{ backgroundColor: 'rgba(255,255,255,0.1)', padding: 16, borderRadius: 12, marginTop: 20, width: '100%' }}>
+          <Text style={{ color: '#FBBF24', fontSize: 12, fontWeight: '800' }}>EXPO_PUBLIC_SUPABASE_URL</Text>
+          <Text style={{ color: '#FBBF24', fontSize: 12, fontWeight: '800', marginTop: 10 }}>EXPO_PUBLIC_SUPABASE_ANON_KEY</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
