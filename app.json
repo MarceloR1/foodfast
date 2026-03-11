@@ -4,7 +4,6 @@
     "slug": "foodfast",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./public/favicon.ico",
     "userInterfaceStyle": "dark",
     "splash": {
       "resizeMode": "contain",
@@ -20,9 +19,6 @@
       "adaptiveIcon": {
         "backgroundColor": "#0F0F0F"
       }
-    },
-    "web": {
-      "favicon": "./public/favicon.ico"
     }
   }
 }
