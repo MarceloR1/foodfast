@@ -12,6 +12,7 @@ const CARD_WIDTH = Math.min(width - 40, 420);
 
 interface Props {
   onRestaurantPress: (restaurant: Restaurant) => void;
+  onCartPress: () => void;
 }
 
 const STATS = [
@@ -20,7 +21,7 @@ const STATS = [
   { icon: '⭐', label: 'Calificación', value: '4.9' },
 ];
 
-export default function Home({ onRestaurantPress }: Props) {
+export default function Home({ onRestaurantPress, onCartPress }: Props) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,7 +75,7 @@ export default function Home({ onRestaurantPress }: Props) {
             <Text style={styles.logo}>Food<Text style={{ color: '#FBBF24' }}>Fast</Text></Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.cartBtn} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.cartBtn} onPress={onCartPress} activeOpacity={0.8}>
           <ShoppingBag size={20} color="#FFF" />
           {itemCount > 0 && (
             <Animated.View style={[styles.badge, { transform: [{ scale: pulseAnim }] }]}>

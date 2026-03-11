@@ -35,6 +35,7 @@ export default function App() {
           {screen === 'home' && (
             <Home
               onRestaurantPress={goToRestaurant}
+              onCartPress={goToCart}
             />
           )}
           {screen === 'restaurant' && selectedRestaurant && (
