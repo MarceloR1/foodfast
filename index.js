@@ -1,5 +1,5 @@
 import { registerRootComponent } from 'expo';
-import App from './DebugApp';
+import App from './App';
 
 console.log('Index: Application starting...');
 
