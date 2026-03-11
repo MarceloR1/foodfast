@@ -21,28 +21,29 @@ export default function App() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+    console.log('App: Mounted');
+    
     async function loadData() {
-      console.log('App: Starting to load data from Supabase...');
+      console.log('App: Starting loadData...');
       try {
         const [cats, rests] = await Promise.all([
-          getCategories(),
-          getFeaturedRestaurants()
+          getCategories().catch(e => { console.error('Cats fail:', e); return []; }),
+          getFeaturedRestaurants().catch(e => { console.error('Rests fail:', e); return []; })
         ]);
         
-        console.log('App: Categories fetched:', cats.length);
-        console.log('App: Restaurants fetched:', rests.length);
+        setCategories(cats || []);
+        setRestaurants(rests || []);
         
-        setCategories(cats);
-        setRestaurants(rests);
-        
-        if (cats.length === 0 && rests.length === 0) {
-           console.warn('App: Both categories and restaurants are empty. Is the DB populated?');
+        if (!cats?.length && !rests?.length) {
+           console.warn('App: No data returned from Supabase');
         }
       } catch (err: any) {
-        console.error('App: Fatal error loading mobile data:', err);
-        setError(err.message || 'Error desconocido');
+        console.error('App: Load Error:', err);
+        setError(err.message || 'Error de conexión con la base de datos');
       } finally {
         setLoading(false);
       }
@@ -50,41 +51,47 @@ export default function App() {
     loadData();
   }, []);
 
+  if (!mounted) return null;
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="light-content" />
       
-      {/* Debug text for Vercel */}
-      <Text style={{color: 'rgba(255,255,255,0.2)', fontSize: 10, position: 'absolute', top: 5, width: '100%', textAlign: 'center'}}>FoodFast v1.0.1 Unified</Text>
+      {/* Aliveness Signal */}
+      <View style={{ height: 2, backgroundColor: '#FBBF24', width: '100%' }} />
+      <Text style={{color: 'rgba(255,255,255,0.3)', fontSize: 9, textAlign: 'center', marginTop: 2}}>
+        FoodFast v1.0.3 • {loading ? 'Cargando...' : 'Listo'} • {error ? 'FAIL' : 'OK'}
+      </Text>
       
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.logoContainer}>
           <View style={styles.iconBg}>
-            <ShoppingBag size={20} color="#0F0F0F" />
+            <Text style={{fontSize: 16}}>🛍️</Text>
           </View>
           <Text style={styles.logoText}>Food<Text style={{color: '#FBBF24'}}>Fast</Text></Text>
         </View>
         <TouchableOpacity style={styles.cartButton}>
-          <ShoppingBag size={24} color="#FFF" />
+           <Text style={{fontSize: 20}}>🛒</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Hero Section (Mini) */}
+        {/* Hero Section */}
         <View style={styles.hero}>
           <Text style={styles.heroTitle}>La comida que amas,</Text>
           <Text style={styles.heroSubtitle}>entregada al instante.</Text>
           <View style={styles.searchBar}>
-            <MapPin size={20} color="rgba(255,255,255,0.4)" />
+            <Text>📍</Text>
             <Text style={styles.searchText}>Introduce tu dirección...</Text>
           </View>
         </View>
 
         {error && (
           <View style={styles.errorBox}>
-            <Text style={styles.errorText}>Ha ocurrido un error: {error}</Text>
+            <Text style={styles.errorText}>⚠️ {error}</Text>
+            <Text style={{color: '#FFF', fontSize: 10, marginTop: 5, textAlign: 'center'}}>Verifica tu conexión y las variables de Supabase.</Text>
           </View>
         )}
 
@@ -98,25 +105,17 @@ export default function App() {
           {loading ? (
              <ActivityIndicator color="#FBBF24" />
           ) : categories.length > 0 ? (
-            categories.map(cat => {
-              const imageUrl = cat.image_url || '';
-              const finalUri = imageUrl.startsWith('/') 
-                ? `https://gfrqsrwxhbmntnshrkyf.supabase.co/storage/v1/object/public/images${imageUrl}` 
-                : imageUrl;
-                
-              return (
-                <TouchableOpacity key={cat.id} style={styles.categoryCard}>
-                  {imageUrl ? (
-                    <Image source={{ uri: finalUri }} style={styles.categoryImage} />
-                  ) : (
-                    <View style={[styles.categoryImage, { backgroundColor: '#333' }]} />
-                  )}
-                  <View style={styles.categoryOverlay} />
-                  <Text style={styles.categoryText}>{cat.name}</Text>
-                </TouchableOpacity>
-              );
-            })
-          ) : (
+            categories.map(cat => (
+              <TouchableOpacity key={cat.id} style={styles.categoryCard}>
+                <Image 
+                  source={{ uri: (cat.image_url || '').startsWith('/') ? `https://gfrqsrwxhbmntnshrkyf.supabase.co/storage/v1/object/public/images${cat.image_url}` : (cat.image_url || 'https://via.placeholder.com/150') }} 
+                  style={styles.categoryImage} 
+                />
+                <View style={styles.categoryOverlay} />
+                <Text style={styles.categoryText}>{cat.name}</Text>
+              </TouchableOpacity>
+            ))
+          ) : !loading && (
             <Text style={styles.emptyText}>No hay categorías disponibles.</Text>
           )}
         </ScrollView>
@@ -130,37 +129,29 @@ export default function App() {
           {loading ? (
             <ActivityIndicator color="#FBBF24" size="large" />
           ) : restaurants.length > 0 ? (
-            restaurants.map(res => {
-              const imageUrl = res.image_url || '';
-              const finalUri = imageUrl.startsWith('/') 
-                ? `https://gfrqsrwxhbmntnshrkyf.supabase.co/storage/v1/object/public/images${imageUrl}` 
-                : imageUrl;
-
-              return (
-                <TouchableOpacity key={res.id} style={styles.restaurantCard}>
-                  {imageUrl ? (
-                    <Image source={{ uri: finalUri }} style={styles.restaurantImage} />
-                  ) : (
-                    <View style={[styles.restaurantImage, { backgroundColor: '#222' }]} />
-                  )}
-                  <View style={styles.ratingBadge}>
-                    <Star size={14} color="#FBBF24" fill="#FBBF24" />
-                    <Text style={styles.ratingText}>{res.rating}</Text>
-                  </View>
-                  <View style={styles.restaurantInfo}>
-                    <Text style={styles.restaurantName}>{res.name}</Text>
-                    <View style={styles.restaurantMeta}>
-                      <View style={styles.metaItem}>
-                        <Clock size={14} color="rgba(255,255,255,0.5)" />
-                        <Text style={styles.metaText}>{res.time_estimate}</Text>
-                      </View>
-                      <Text style={styles.priceRange}>{res.price_range}</Text>
+            restaurants.map(res => (
+              <TouchableOpacity key={res.id} style={styles.restaurantCard}>
+                <Image 
+                  source={{ uri: (res.image_url || '').startsWith('/') ? `https://gfrqsrwxhbmntnshrkyf.supabase.co/storage/v1/object/public/images${res.image_url}` : (res.image_url || 'https://via.placeholder.com/300') }} 
+                  style={styles.restaurantImage} 
+                />
+                <View style={styles.ratingBadge}>
+                  <Text style={{fontSize: 12}}>⭐</Text>
+                  <Text style={styles.ratingText}>{res.rating}</Text>
+                </View>
+                <View style={styles.restaurantInfo}>
+                  <Text style={styles.restaurantName}>{res.name}</Text>
+                  <View style={styles.restaurantMeta}>
+                    <View style={styles.metaItem}>
+                      <Text>🕒</Text>
+                      <Text style={styles.metaText}>{res.time_estimate}</Text>
                     </View>
+                    <Text style={styles.priceRange}>{res.price_range}</Text>
                   </View>
-                </TouchableOpacity>
-              );
-            })
-          ) : (
+                </View>
+              </TouchableOpacity>
+            ))
+          ) : !loading && (
             <Text style={styles.emptyText}>No hay restaurantes disponibles.</Text>
           )}
         </View>
