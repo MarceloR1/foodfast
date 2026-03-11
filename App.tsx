@@ -10,8 +10,6 @@ import {
   Text,
   StyleSheet
 } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { ShoppingBag, Star, Clock, MapPin, ChevronRight } from 'lucide-react-native';
 import { getCategories, getFeaturedRestaurants, Category, Restaurant } from './src/services/api';
 
 const { width } = Dimensions.get('window');
@@ -54,14 +52,13 @@ export default function App() {
   if (!mounted) return null;
 
   return (
-    <SafeAreaProvider>
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="light-content" />
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" />
       
       {/* Aliveness Signal */}
       <View style={{ height: 2, backgroundColor: '#FBBF24', width: '100%' }} />
-      <Text style={{color: 'rgba(255,255,255,0.3)', fontSize: 9, textAlign: 'center', marginTop: 2}}>
-        FoodFast v1.0.3 • {loading ? 'Cargando...' : 'Listo'} • {error ? 'FAIL' : 'OK'}
+      <Text style={{color: '#FBBF24', fontSize: 10, textAlign: 'center', marginTop: 10, fontWeight: 'bold'}}>
+        FOODFAST LIVE • {loading ? 'CONECTANDO...' : 'SISTEMA ONLINE'}
       </Text>
       
       {/* Header */}
@@ -156,8 +153,7 @@ export default function App() {
           )}
         </View>
       </ScrollView>
-      </SafeAreaView>
-    </SafeAreaProvider>
+    </View>
   );
 }
 
