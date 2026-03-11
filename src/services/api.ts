@@ -26,10 +26,7 @@ export interface MenuItem {
   image_url: string;
 }
 
-const resolveUrl = (url: string) =>
-  (url || '').startsWith('/')
-    ? `https://gfrqsrwxhbmntnshrkyf.supabase.co/storage/v1/object/public/images${url}`
-    : url || 'https://via.placeholder.com/300';
+const resolveUrl = (url: string) => url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300';
 
 export const getCategories = async (): Promise<Category[]> => {
   const { data, error } = await supabase.from('categories').select('*').order('name');
