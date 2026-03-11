@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { 
-  StyleSheet, 
-  Text, 
   View, 
   ScrollView, 
   Image, 
   TouchableOpacity, 
-  SafeAreaView, 
   StatusBar,
   ActivityIndicator,
-  Dimensions
+  Dimensions,
+  Text,
+  StyleSheet
 } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { ShoppingBag, Star, Clock, MapPin, ChevronRight } from 'lucide-react-native';
 import { getCategories, getFeaturedRestaurants, Category, Restaurant } from './src/services/api';
 
@@ -51,8 +51,9 @@ export default function App() {
   }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" />
       
       {/* Debug text for Vercel */}
       <Text style={{color: 'rgba(255,255,255,0.2)', fontSize: 10, position: 'absolute', top: 5, width: '100%', textAlign: 'center'}}>FoodFast v1.0.1 Unified</Text>
@@ -61,12 +62,12 @@ export default function App() {
       <View style={styles.header}>
         <View style={styles.logoContainer}>
           <View style={styles.iconBg}>
-            <ShoppingBag size={20} stroke="#0F0F0F" />
+            <ShoppingBag size={20} color="#0F0F0F" />
           </View>
           <Text style={styles.logoText}>Food<Text style={{color: '#FBBF24'}}>Fast</Text></Text>
         </View>
         <TouchableOpacity style={styles.cartButton}>
-          <ShoppingBag size={24} stroke="#FFF" />
+          <ShoppingBag size={24} color="#FFF" />
         </TouchableOpacity>
       </View>
 
@@ -76,7 +77,7 @@ export default function App() {
           <Text style={styles.heroTitle}>La comida que amas,</Text>
           <Text style={styles.heroSubtitle}>entregada al instante.</Text>
           <View style={styles.searchBar}>
-            <MapPin size={20} stroke="rgba(255,255,255,0.4)" />
+            <MapPin size={20} color="rgba(255,255,255,0.4)" />
             <Text style={styles.searchText}>Introduce tu dirección...</Text>
           </View>
         </View>
@@ -97,13 +98,24 @@ export default function App() {
           {loading ? (
              <ActivityIndicator color="#FBBF24" />
           ) : categories.length > 0 ? (
-            categories.map(cat => (
-              <TouchableOpacity key={cat.id} style={styles.categoryCard}>
-                <Image source={{ uri: cat.image_url.startsWith('/') ? `https://gfrqsrwxhbmntnshrkyf.supabase.co/storage/v1/object/public/images${cat.image_url}` : cat.image_url }} style={styles.categoryImage} />
-                <View style={styles.categoryOverlay} />
-                <Text style={styles.categoryText}>{cat.name}</Text>
-              </TouchableOpacity>
-            ))
+            categories.map(cat => {
+              const imageUrl = cat.image_url || '';
+              const finalUri = imageUrl.startsWith('/') 
+                ? `https://gfrqsrwxhbmntnshrkyf.supabase.co/storage/v1/object/public/images${imageUrl}` 
+                : imageUrl;
+                
+              return (
+                <TouchableOpacity key={cat.id} style={styles.categoryCard}>
+                  {imageUrl ? (
+                    <Image source={{ uri: finalUri }} style={styles.categoryImage} />
+                  ) : (
+                    <View style={[styles.categoryImage, { backgroundColor: '#333' }]} />
+                  )}
+                  <View style={styles.categoryOverlay} />
+                  <Text style={styles.categoryText}>{cat.name}</Text>
+                </TouchableOpacity>
+              );
+            })
           ) : (
             <Text style={styles.emptyText}>No hay categorías disponibles.</Text>
           )}
@@ -118,31 +130,43 @@ export default function App() {
           {loading ? (
             <ActivityIndicator color="#FBBF24" size="large" />
           ) : restaurants.length > 0 ? (
-            restaurants.map(res => (
-              <TouchableOpacity key={res.id} style={styles.restaurantCard}>
-                <Image source={{ uri: res.image_url.startsWith('/') ? `https://gfrqsrwxhbmntnshrkyf.supabase.co/storage/v1/object/public/images${res.image_url}` : res.image_url }} style={styles.restaurantImage} />
-                <View style={styles.ratingBadge}>
-                  <Star size={14} stroke="#FBBF24" fill="#FBBF24" />
-                  <Text style={styles.ratingText}>{res.rating}</Text>
-                </View>
-                <View style={styles.restaurantInfo}>
-                  <Text style={styles.restaurantName}>{res.name}</Text>
-                  <View style={styles.restaurantMeta}>
-                    <View style={styles.metaItem}>
-                      <Clock size={14} stroke="rgba(255,255,255,0.5)" />
-                      <Text style={styles.metaText}>{res.time_estimate}</Text>
-                    </View>
-                    <Text style={styles.priceRange}>{res.price_range}</Text>
+            restaurants.map(res => {
+              const imageUrl = res.image_url || '';
+              const finalUri = imageUrl.startsWith('/') 
+                ? `https://gfrqsrwxhbmntnshrkyf.supabase.co/storage/v1/object/public/images${imageUrl}` 
+                : imageUrl;
+
+              return (
+                <TouchableOpacity key={res.id} style={styles.restaurantCard}>
+                  {imageUrl ? (
+                    <Image source={{ uri: finalUri }} style={styles.restaurantImage} />
+                  ) : (
+                    <View style={[styles.restaurantImage, { backgroundColor: '#222' }]} />
+                  )}
+                  <View style={styles.ratingBadge}>
+                    <Star size={14} color="#FBBF24" fill="#FBBF24" />
+                    <Text style={styles.ratingText}>{res.rating}</Text>
                   </View>
-                </View>
-              </TouchableOpacity>
-            ))
+                  <View style={styles.restaurantInfo}>
+                    <Text style={styles.restaurantName}>{res.name}</Text>
+                    <View style={styles.restaurantMeta}>
+                      <View style={styles.metaItem}>
+                        <Clock size={14} color="rgba(255,255,255,0.5)" />
+                        <Text style={styles.metaText}>{res.time_estimate}</Text>
+                      </View>
+                      <Text style={styles.priceRange}>{res.price_range}</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              );
+            })
           ) : (
             <Text style={styles.emptyText}>No hay restaurantes disponibles.</Text>
           )}
         </View>
       </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
