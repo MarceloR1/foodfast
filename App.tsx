@@ -150,6 +150,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0F0F0F',
+    minHeight: '100%',
   },
   header: {
     flexDirection: 'row',
