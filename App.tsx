@@ -20,18 +20,29 @@ export default function App() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadData() {
+      console.log('App: Starting to load data from Supabase...');
       try {
         const [cats, rests] = await Promise.all([
           getCategories(),
           getFeaturedRestaurants()
         ]);
+        
+        console.log('App: Categories fetched:', cats.length);
+        console.log('App: Restaurants fetched:', rests.length);
+        
         setCategories(cats);
         setRestaurants(rests);
-      } catch (error) {
-        console.error('Error loading mobile data:', error);
+        
+        if (cats.length === 0 && rests.length === 0) {
+           console.warn('App: Both categories and restaurants are empty. Is the DB populated?');
+        }
+      } catch (err: any) {
+        console.error('App: Fatal error loading mobile data:', err);
+        setError(err.message || 'Error desconocido');
       } finally {
         setLoading(false);
       }
@@ -43,16 +54,19 @@ export default function App() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
       
+      {/* Debug text for Vercel */}
+      <Text style={{color: 'rgba(255,255,255,0.2)', fontSize: 10, position: 'absolute', top: 5, width: '100%', textAlign: 'center'}}>FoodFast v1.0.1 Unified</Text>
+      
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.logoContainer}>
           <View style={styles.iconBg}>
-            <ShoppingBag size={20} color="#0F0F0F" />
+            <ShoppingBag size={20} stroke="#0F0F0F" />
           </View>
           <Text style={styles.logoText}>Food<Text style={{color: '#FBBF24'}}>Fast</Text></Text>
         </View>
         <TouchableOpacity style={styles.cartButton}>
-          <ShoppingBag size={24} color="#FFF" />
+          <ShoppingBag size={24} stroke="#FFF" />
         </TouchableOpacity>
       </View>
 
@@ -62,10 +76,16 @@ export default function App() {
           <Text style={styles.heroTitle}>La comida que amas,</Text>
           <Text style={styles.heroSubtitle}>entregada al instante.</Text>
           <View style={styles.searchBar}>
-            <MapPin size={20} color="rgba(255,255,255,0.4)" />
+            <MapPin size={20} stroke="rgba(255,255,255,0.4)" />
             <Text style={styles.searchText}>Introduce tu dirección...</Text>
           </View>
         </View>
+
+        {error && (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>Ha ocurrido un error: {error}</Text>
+          </View>
+        )}
 
         {/* Categories */}
         <View style={styles.sectionHeader}>
@@ -76,7 +96,7 @@ export default function App() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoriesScroll}>
           {loading ? (
              <ActivityIndicator color="#FBBF24" />
-          ) : (
+          ) : categories.length > 0 ? (
             categories.map(cat => (
               <TouchableOpacity key={cat.id} style={styles.categoryCard}>
                 <Image source={{ uri: cat.image_url.startsWith('/') ? `https://gfrqsrwxhbmntnshrkyf.supabase.co/storage/v1/object/public/images${cat.image_url}` : cat.image_url }} style={styles.categoryImage} />
@@ -84,6 +104,8 @@ export default function App() {
                 <Text style={styles.categoryText}>{cat.name}</Text>
               </TouchableOpacity>
             ))
+          ) : (
+            <Text style={styles.emptyText}>No hay categorías disponibles.</Text>
           )}
         </ScrollView>
 
@@ -95,19 +117,19 @@ export default function App() {
         <View style={styles.restaurantsContainer}>
           {loading ? (
             <ActivityIndicator color="#FBBF24" size="large" />
-          ) : (
+          ) : restaurants.length > 0 ? (
             restaurants.map(res => (
               <TouchableOpacity key={res.id} style={styles.restaurantCard}>
                 <Image source={{ uri: res.image_url.startsWith('/') ? `https://gfrqsrwxhbmntnshrkyf.supabase.co/storage/v1/object/public/images${res.image_url}` : res.image_url }} style={styles.restaurantImage} />
                 <View style={styles.ratingBadge}>
-                  <Star size={14} color="#FBBF24" fill="#FBBF24" />
+                  <Star size={14} stroke="#FBBF24" fill="#FBBF24" />
                   <Text style={styles.ratingText}>{res.rating}</Text>
                 </View>
                 <View style={styles.restaurantInfo}>
                   <Text style={styles.restaurantName}>{res.name}</Text>
                   <View style={styles.restaurantMeta}>
                     <View style={styles.metaItem}>
-                      <Clock size={14} color="rgba(255,255,255,0.5)" />
+                      <Clock size={14} stroke="rgba(255,255,255,0.5)" />
                       <Text style={styles.metaText}>{res.time_estimate}</Text>
                     </View>
                     <Text style={styles.priceRange}>{res.price_range}</Text>
@@ -115,6 +137,8 @@ export default function App() {
                 </View>
               </TouchableOpacity>
             ))
+          ) : (
+            <Text style={styles.emptyText}>No hay restaurantes disponibles.</Text>
           )}
         </View>
       </ScrollView>
@@ -288,5 +312,25 @@ const styles = StyleSheet.create({
   priceRange: {
     color: '#FBBF24',
     fontWeight: 'bold',
+  },
+  errorBox: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    padding: 15,
+    margin: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.2)',
+  },
+  errorText: {
+    color: '#EF4444',
+    textAlign: 'center',
+    fontSize: 14,
+  },
+  emptyText: {
+    color: 'rgba(255,255,255,0.4)',
+    textAlign: 'center',
+    padding: 20,
+    fontSize: 14,
+    fontStyle: 'italic',
   }
 });
