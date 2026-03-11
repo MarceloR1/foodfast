@@ -49,8 +49,6 @@ export default function App() {
     loadData();
   }, []);
 
-  if (!mounted) return null;
-
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
