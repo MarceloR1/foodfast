@@ -148,7 +148,7 @@ export default function RestaurantDetail({ restaurant, onBack, onCartPress }: Pr
                     <Text style={styles.itemDesc} numberOfLines={2}>{item.description}</Text>
                   ) : null}
                   <View style={styles.itemFooter}>
-                    <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
+                    <Text style={styles.itemPrice}>L{item.price.toFixed(2)}</Text>
                     <TouchableOpacity
                       style={[styles.addBtn, addedId === item.id && styles.addBtnSuccess]}
                       onPress={() => handleAdd(item)}

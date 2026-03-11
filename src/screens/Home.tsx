@@ -99,7 +99,7 @@ export default function Home({ onRestaurantPress, onCartPress }: Props) {
           <View>
             <Text style={styles.logoText}>Food<Text style={{ color: '#FBBF24' }}>Fast</Text></Text>
             <View style={styles.locationRow}>
-              <Text style={styles.locationText}>📍 Ciudad de México</Text>
+              <Text style={styles.locationText}>📍 Tegucigalpa, HN</Text>
             </View>
           </View>
         </View>

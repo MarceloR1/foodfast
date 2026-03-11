@@ -39,7 +39,7 @@ export default function ProfileScreen() {
         {[
           { label: 'Pedidos', value: '12', icon: '📦' },
           { label: 'Puntos', value: '1.2K', icon: '⭐' },
-          { label: 'Ahorrado', value: '$48', icon: '💰' },
+          { label: 'Ahorrado', value: 'L1,200', icon: '💰' },
         ].map((s, i) => (
           <View key={i} style={styles.statCard}>
             <Text style={styles.statEmoji}>{s.icon}</Text>

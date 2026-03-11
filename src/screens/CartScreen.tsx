@@ -10,8 +10,8 @@ interface Props {
   onBack: () => void;
 }
 
-const DELIVERY_FEE = 2.99;
-const FREE_DELIVERY_THRESHOLD = 25;
+const DELIVERY_FEE = 65;
+const FREE_DELIVERY_THRESHOLD = 450;
 
 export default function CartScreen({ onBack }: Props) {
   const { items, updateQuantity, removeItem, clearCart, total, itemCount } = useCart();
@@ -79,7 +79,7 @@ export default function CartScreen({ onBack }: Props) {
             <View style={styles.promoBar}>
               <Text style={styles.promoBarText}>
                 Agrega <Text style={{ color: '#FBBF24', fontWeight: '800' }}>
-                  ${(FREE_DELIVERY_THRESHOLD - total).toFixed(2)}
+                  L{((FREE_DELIVERY_THRESHOLD - total)).toFixed(2)}
                 </Text> más para envío gratis 🎉
               </Text>
               <View style={styles.progressBg}>
@@ -101,7 +101,7 @@ export default function CartScreen({ onBack }: Props) {
                 <View style={styles.itemBody}>
                   <Text style={styles.itemRest} numberOfLines={1}>{item.restaurantName}</Text>
                   <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
-                  <Text style={styles.itemPrice}>${(item.price * item.quantity).toFixed(2)}</Text>
+                  <Text style={styles.itemPrice}>L{(item.price * item.quantity).toFixed(2)}</Text>
                 </View>
                 <View style={styles.qtyControls}>
                   <TouchableOpacity
@@ -134,25 +134,25 @@ export default function CartScreen({ onBack }: Props) {
             <View style={styles.summaryCard}>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Subtotal</Text>
-                <Text style={styles.summaryValue}>${total.toFixed(2)}</Text>
+                <Text style={styles.summaryValue}>L{total.toFixed(2)}</Text>
               </View>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Envío</Text>
                 {deliveryFee === 0
                   ? <Text style={[styles.summaryValue, { color: '#22C55E' }]}>Gratis</Text>
-                  : <Text style={styles.summaryValue}>${deliveryFee.toFixed(2)}</Text>
+                  : <Text style={styles.summaryValue}>L{deliveryFee.toFixed(2)}</Text>
                 }
               </View>
               <View style={[styles.summaryRow, styles.summaryTotalRow]}>
                 <Text style={styles.totalLabel}>Total</Text>
-                <Text style={styles.totalValue}>${grandTotal.toFixed(2)}</Text>
+                <Text style={styles.totalValue}>L{grandTotal.toFixed(2)}</Text>
               </View>
             </View>
 
             <TouchableOpacity style={styles.orderBtn} onPress={handleOrder} activeOpacity={0.85}>
               <Zap size={20} color="#0A0A0A" />
               <Text style={styles.orderBtnText}>Confirmar Pedido</Text>
-              <Text style={styles.orderBtnTotal}>${grandTotal.toFixed(2)}</Text>
+              <Text style={styles.orderBtnTotal}>L{grandTotal.toFixed(2)}</Text>
             </TouchableOpacity>
           </View>
         </>
