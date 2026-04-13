@@ -12,15 +12,23 @@ try {
   supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
 } catch (e) {
   console.error('Supabase: Initialization failed!', e);
-  // Provide a dummy object to prevent crashes on calls
-  supabaseInstance = {
-    from: () => ({
-      select: () => ({
-        order: () => Promise.resolve({ data: [], error: null }),
-        limit: () => Promise.resolve({ data: [], error: null }),
-      })
-    })
+  // Provide a more robust dummy object to prevent crashes on chained calls
+  const dummy: any = {
+    from: () => dummy,
+    select: () => dummy,
+    order: () => dummy,
+    limit: () => dummy,
+    eq: () => dummy,
+    single: () => dummy,
+    insert: () => dummy,
+    update: () => dummy,
+    delete: () => dummy,
+    upsert: () => dummy,
+    // Add Promise support for final calls
+    then: (resolve: any) => resolve({ data: [], error: null }),
+    catch: () => dummy,
   };
+  supabaseInstance = dummy;
 }
 
 export const supabase = supabaseInstance;

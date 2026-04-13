@@ -2,21 +2,41 @@ import React from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, Platform
 } from 'react-native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import {
   User, Star, Clock, MapPin, Heart, Bell, Shield, ChevronRight,
-  Award, Package, HelpCircle
+  Award, Package, HelpCircle, LogOut
 } from 'lucide-react-native';
+import { useAuth } from '../context/AuthContext';
+
+type RootStackParamList = {
+  Profile: undefined;
+  OrderHistory: undefined;
+};
+
+interface Props {
+  navigation: StackNavigationProp<RootStackParamList, 'Profile'>;
+}
 
 const MENU_ITEMS = [
-  { icon: <Package size={20} color="#FBBF24" />, label: 'Mis Pedidos', count: 12 },
-  { icon: <Heart size={20} color="#EF4444" />, label: 'Mis Favoritos', count: 5 },
-  { icon: <MapPin size={20} color="#3B82F6" />, label: 'Mis Direcciones', count: 2 },
-  { icon: <Bell size={20} color="#A78BFA" />, label: 'Notificaciones', count: 3 },
-  { icon: <Shield size={20} color="#22C55E" />, label: 'Seguridad', count: 0 },
-  { icon: <HelpCircle size={20} color="rgba(255,255,255,0.4)" />, label: 'Ayuda', count: 0 },
+  { id: 'orders', icon: <Package size={20} color="#FBBF24" />, label: 'Mis Pedidos', count: 0 },
+  { id: 'favs', icon: <Heart size={20} color="#EF4444" />, label: 'Mis Favoritos', count: 0 },
+  { id: 'addr', icon: <MapPin size={20} color="#3B82F6" />, label: 'Mis Direcciones', count: 0 },
+  { id: 'notif', icon: <Bell size={20} color="#A78BFA" />, label: 'Notificaciones', count: 0 },
+  { id: 'sec', icon: <Shield size={20} color="#22C55E" />, label: 'Seguridad', count: 0 },
+  { id: 'help', icon: <HelpCircle size={20} color="rgba(255,255,255,0.4)" />, label: 'Ayuda', count: 0 },
 ];
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ navigation }: Props) {
+  const { user, signOut } = useAuth();
+  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Invitado';
+
+  const handleMenuPress = (id: string) => {
+    if (id === 'orders') {
+      navigation.navigate('OrderHistory');
+    }
+  };
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header */}
@@ -27,11 +47,19 @@ export default function ProfileScreen() {
           </View>
           <View style={styles.onlineDot} />
         </View>
-        <Text style={styles.userName}>Invitado</Text>
-        <Text style={styles.userEmail}>Inicia sesión para más opciones</Text>
-        <TouchableOpacity style={styles.loginBtn} activeOpacity={0.85}>
-          <Text style={styles.loginBtnText}>Iniciar Sesión</Text>
-        </TouchableOpacity>
+        <Text style={styles.userName}>{userName}</Text>
+        <Text style={styles.userEmail}>{user?.email || 'Inicia sesión para más opciones'}</Text>
+        
+        {user ? (
+          <TouchableOpacity style={styles.logoutBtn} onPress={signOut} activeOpacity={0.85}>
+            <LogOut size={16} color="#EF4444" />
+            <Text style={styles.logoutBtnText}>Cerrar Sesión</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={styles.loginBtn} activeOpacity={0.85}>
+            <Text style={styles.loginBtnText}>Iniciar Sesión</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Stats */}
@@ -67,6 +95,7 @@ export default function ProfileScreen() {
           <TouchableOpacity
             key={i}
             style={[styles.menuRow, i < MENU_ITEMS.length - 1 && styles.menuRowBorder]}
+            onPress={() => handleMenuPress(item.id)}
             activeOpacity={0.7}
           >
             <View style={styles.menuIcon}>{item.icon}</View>
@@ -108,11 +137,13 @@ const styles = StyleSheet.create({
   },
   userName: { fontSize: 24, fontWeight: '900', color: '#FFF' },
   userEmail: { fontSize: 13, color: 'rgba(255,255,255,0.4)' },
-  loginBtn: {
-    marginTop: 8, backgroundColor: '#FBBF24', paddingHorizontal: 28,
-    paddingVertical: 11, borderRadius: 20,
-  },
   loginBtnText: { color: '#080808', fontWeight: '800', fontSize: 14 },
+  logoutBtn: {
+    marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: 'rgba(239, 68, 68, 0.1)', paddingHorizontal: 20,
+    paddingVertical: 10, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.2)',
+  },
+  logoutBtnText: { color: '#EF4444', fontWeight: '700', fontSize: 13 },
   statsRow: { flexDirection: 'row', paddingHorizontal: 16, gap: 10, marginBottom: 16 },
   statCard: {
     flex: 1, backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 20, padding: 14,

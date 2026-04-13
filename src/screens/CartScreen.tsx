@@ -6,27 +6,59 @@ import {
 import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag, CheckCircle, Zap } from 'lucide-react-native';
 import { useCart } from '../context/CartContext';
 
+import { StackNavigationProp } from '@react-navigation/stack';
+
+type RootStackParamList = {
+  Home: undefined;
+  Cart: undefined;
+};
+
 interface Props {
-  onBack: () => void;
+  navigation: StackNavigationProp<RootStackParamList, 'Cart'>;
 }
 
 const DELIVERY_FEE = 65;
 const FREE_DELIVERY_THRESHOLD = 450;
 
-export default function CartScreen({ onBack }: Props) {
+import { useAuth } from '../context/AuthContext';
+import { createOrder } from '../services/orders';
+
+export default function CartScreen({ navigation }: Props) {
   const { items, updateQuantity, removeItem, clearCart, total, itemCount } = useCart();
+  const { user } = useAuth();
   const [ordered, setOrdered] = useState(false);
+  const [isOrdering, setIsOrdering] = useState(false);
 
   const deliveryFee = total >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
   const grandTotal = total + deliveryFee;
 
-  function handleOrder() {
-    setOrdered(true);
-    setTimeout(() => {
-      clearCart();
-      setOrdered(false);
-      onBack();
-    }, 3000);
+  async function handleOrder() {
+    if (!user) {
+      alert('Debes iniciar sesión para realizar un pedido');
+      return;
+    }
+
+    if (items.length === 0) return;
+
+    setIsOrdering(true);
+    try {
+      // Find restaurantId (assuming all items are from the same restaurant for now)
+      // For a real app, you'd handle multiple restaurants or force one at a time
+      const restaurantId = (items[0] as any).restaurant_id || '9ce988e4-8a12-4f2b-8a9d-547e7d6b8c9d'; // Fallback for safety
+
+      await createOrder(user.id, restaurantId, grandTotal, items);
+      
+      setOrdered(true);
+      setTimeout(() => {
+        clearCart();
+        setOrdered(false);
+        navigation.navigate('Home');
+      }, 3000);
+    } catch (err: any) {
+      alert('Error al procesar el pedido: ' + err.message);
+    } finally {
+      setIsOrdering(false);
+    }
   }
 
   if (ordered) {
@@ -48,7 +80,7 @@ export default function CartScreen({ onBack }: Props) {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={onBack} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.navigate('Home')} activeOpacity={0.8}>
           <ArrowLeft size={20} color="#FFF" />
         </TouchableOpacity>
         <View>
@@ -67,7 +99,7 @@ export default function CartScreen({ onBack }: Props) {
           <Text style={styles.emptyEmoji}>🛒</Text>
           <Text style={styles.emptyTitle}>Tu carrito está vacío</Text>
           <Text style={styles.emptySub}>¡Agrega platillos desde los restaurantes!</Text>
-          <TouchableOpacity style={styles.exploreBtn} onPress={onBack} activeOpacity={0.85}>
+          <TouchableOpacity style={styles.exploreBtn} onPress={() => navigation.navigate('Home')} activeOpacity={0.85}>
             <ShoppingBag size={18} color="#0A0A0A" />
             <Text style={styles.exploreBtnText}>Explorar restaurantes</Text>
           </TouchableOpacity>
@@ -149,10 +181,21 @@ export default function CartScreen({ onBack }: Props) {
               </View>
             </View>
 
-            <TouchableOpacity style={styles.orderBtn} onPress={handleOrder} activeOpacity={0.85}>
-              <Zap size={20} color="#0A0A0A" />
-              <Text style={styles.orderBtnText}>Confirmar Pedido</Text>
-              <Text style={styles.orderBtnTotal}>L{grandTotal.toFixed(2)}</Text>
+            <TouchableOpacity 
+              style={[styles.orderBtn, isOrdering && { opacity: 0.7 }]} 
+              onPress={handleOrder} 
+              disabled={isOrdering}
+              activeOpacity={0.85}
+            >
+              {isOrdering ? (
+                <ActivityIndicator color="#0A0A0A" style={{ flex: 1 }} />
+              ) : (
+                <>
+                  <Zap size={20} color="#0A0A0A" />
+                  <Text style={styles.orderBtnText}>Confirmar Pedido</Text>
+                  <Text style={styles.orderBtnTotal}>L{grandTotal.toFixed(2)}</Text>
+                </>
+              )}
             </TouchableOpacity>
           </View>
         </>

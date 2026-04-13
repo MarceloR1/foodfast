@@ -9,13 +9,22 @@ import { getMenuItems, MenuItem, Restaurant } from '../services/api';
 
 const { width } = Dimensions.get('window');
 
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp } from '@react-navigation/native';
+
+type RootStackParamList = {
+  Home: undefined;
+  Cart: undefined;
+  RestaurantDetail: { restaurant: Restaurant };
+};
+
 interface Props {
-  restaurant: Restaurant;
-  onBack: () => void;
-  onCartPress: () => void;
+  navigation: StackNavigationProp<RootStackParamList, 'RestaurantDetail'>;
+  route: RouteProp<RootStackParamList, 'RestaurantDetail'>;
 }
 
-export default function RestaurantDetail({ restaurant, onBack, onCartPress }: Props) {
+export default function RestaurantDetail({ navigation, route }: Props) {
+  const { restaurant } = route.params;
   const [items, setItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [addedId, setAddedId] = useState<string | null>(null);
@@ -56,11 +65,11 @@ export default function RestaurantDetail({ restaurant, onBack, onCartPress }: Pr
     <View style={styles.container}>
       {/* Floating header (becomes visible on scroll) */}
       <Animated.View style={[styles.floatingHeader, { backgroundColor: headerBg }]}>
-        <TouchableOpacity style={styles.iconBtn} onPress={onBack} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()} activeOpacity={0.8}>
           <ArrowLeft size={20} color="#FFF" />
         </TouchableOpacity>
         <Text style={styles.floatingTitle} numberOfLines={1}>{restaurant.name}</Text>
-        <TouchableOpacity style={styles.iconBtn} onPress={onCartPress} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Cart')} activeOpacity={0.8}>
           <ShoppingCart size={20} color="#FFF" />
           {itemCount > 0 && (
             <View style={styles.badge}><Text style={styles.badgeText}>{itemCount}</Text></View>
@@ -178,7 +187,7 @@ export default function RestaurantDetail({ restaurant, onBack, onCartPress }: Pr
             </View>
             <Text style={styles.cartBarLabel}>artículos</Text>
           </View>
-          <TouchableOpacity style={styles.cartBarBtn} onPress={onCartPress} activeOpacity={0.85}>
+          <TouchableOpacity style={styles.cartBarBtn} onPress={() => navigation.navigate('Cart')} activeOpacity={0.85}>
             <Text style={styles.cartBarBtnText}>Ver carrito</Text>
             <Text style={styles.cartBarTotal}>${total.toFixed(2)}</Text>
           </TouchableOpacity>

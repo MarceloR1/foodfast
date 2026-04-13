@@ -6,13 +6,20 @@ import {
 import { Search as SearchIcon, Star, Clock, X } from 'lucide-react-native';
 import { Restaurant, getRestaurants } from '../services/api';
 
+import { StackNavigationProp } from '@react-navigation/stack';
+
+type RootStackParamList = {
+  Search: undefined;
+  RestaurantDetail: { restaurant: Restaurant };
+};
+
 interface Props {
-  onRestaurantPress: (r: Restaurant) => void;
+  navigation: StackNavigationProp<RootStackParamList, 'Search'>;
 }
 
 const TAGS = ['🍔 Burgers', '🍕 Pizza', '🍣 Sushi', '🌮 Tacos', '🍜 Ramen', '🥩 Carnes', '🥗 Saludable'];
 
-export default function SearchScreen({ onRestaurantPress }: Props) {
+export default function SearchScreen({ navigation }: Props) {
   const [query, setQuery] = useState('');
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,7 +87,7 @@ export default function SearchScreen({ onRestaurantPress }: Props) {
           <TouchableOpacity
             key={res.id}
             style={styles.row}
-            onPress={() => onRestaurantPress(res)}
+            onPress={() => navigation.navigate('RestaurantDetail', { restaurant: res })}
             activeOpacity={0.85}
           >
             <Image source={{ uri: res.image_url }} style={styles.rowImg} />
@@ -115,7 +122,7 @@ const styles = s({
     backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 18, paddingHorizontal: 14, paddingVertical: 12,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
   },
-  input: { flex: 1, color: '#FFF', fontSize: 15, outlineStyle: 'none' } as any,
+  input: { flex: 1, color: '#FFF', fontSize: 15 },
   tagsScroll: { paddingHorizontal: 16, gap: 8, paddingBottom: 12 },
   tag: {
     paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20,

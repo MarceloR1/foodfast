@@ -10,9 +10,16 @@ import { getCategories, getFeaturedRestaurants, Category, Restaurant } from '../
 const { width } = Dimensions.get('window');
 const FEAT_CARD_W = Math.min(width * 0.72, 280);
 
+import { StackNavigationProp } from '@react-navigation/stack';
+
+type RootStackParamList = {
+  Home: undefined;
+  RestaurantDetail: { restaurant: Restaurant };
+  Cart: undefined;
+};
+
 interface Props {
-  onRestaurantPress: (restaurant: Restaurant) => void;
-  onCartPress: () => void;
+  navigation: StackNavigationProp<RootStackParamList, 'Home'>;
 }
 
 const QUICK_ACTIONS = [
@@ -22,7 +29,7 @@ const QUICK_ACTIONS = [
   { emoji: '💸', label: 'Ofertas', sub: 'Descuentos' },
 ];
 
-export default function Home({ onRestaurantPress, onCartPress }: Props) {
+export default function Home({ navigation }: Props) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,16 +41,14 @@ export default function Home({ onRestaurantPress, onCartPress }: Props) {
   useEffect(() => {
     async function load() {
       try {
-        if (!process.env.EXPO_PUBLIC_SUPABASE_URL || !process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY) {
-          setLoading(false);
-          return;
-        }
         const [cats, rests] = await Promise.all([
-          getCategories().catch(() => []),
-          getFeaturedRestaurants().catch(() => []),
+          getCategories(),
+          getFeaturedRestaurants(),
         ]);
         setCategories(cats);
         setRestaurants(rests);
+      } catch (err) {
+        console.error('Error loading home data:', err);
       } finally {
         setLoading(false);
       }
@@ -77,12 +82,18 @@ export default function Home({ onRestaurantPress, onCartPress }: Props) {
         <Text style={{ fontSize: 50, marginBottom: 20 }}>⚠️</Text>
         <Text style={{ color: '#EF4444', fontSize: 20, fontWeight: '900', textAlign: 'center', marginBottom: 10 }}>Faltan Variables de Entorno</Text>
         <Text style={{ color: '#FFF', fontSize: 14, textAlign: 'center', opacity: 0.7, lineHeight: 22 }}>
-          La app no puede conectar con Supabase. En Netlify, debes agregar estas variables:
+          La app no puede conectar con Supabase. En producción o Netlify, debes agregar estas variables:
         </Text>
         <View style={{ backgroundColor: 'rgba(255,255,255,0.1)', padding: 16, borderRadius: 12, marginTop: 20, width: '100%' }}>
           <Text style={{ color: '#FBBF24', fontSize: 12, fontWeight: '800' }}>EXPO_PUBLIC_SUPABASE_URL</Text>
           <Text style={{ color: '#FBBF24', fontSize: 12, fontWeight: '800', marginTop: 10 }}>EXPO_PUBLIC_SUPABASE_ANON_KEY</Text>
         </View>
+        <TouchableOpacity 
+          style={{ marginTop: 30, padding: 15, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12 }}
+          onPress={() => setLoading(true)}
+        >
+          <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Reintentar</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -103,7 +114,7 @@ export default function Home({ onRestaurantPress, onCartPress }: Props) {
             </View>
           </View>
         </View>
-        <TouchableOpacity style={styles.cartBtn} onPress={onCartPress} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.cartBtn} onPress={() => navigation.navigate('Cart')} activeOpacity={0.8}>
           <ShoppingBag size={20} color="#FFF" />
           {itemCount > 0 && (
             <Animated.View style={[styles.badge, { transform: [{ scale: pulseAnim }] }]}>
@@ -162,7 +173,7 @@ export default function Home({ onRestaurantPress, onCartPress }: Props) {
             <TouchableOpacity
               key={res.id}
               style={[styles.featCard, { width: FEAT_CARD_W }]}
-              onPress={() => onRestaurantPress(res)}
+              onPress={() => navigation.navigate('RestaurantDetail', { restaurant: res })}
               activeOpacity={0.88}
             >
               <Image source={{ uri: res.image_url }} style={styles.featImg} />
@@ -255,7 +266,7 @@ export default function Home({ onRestaurantPress, onCartPress }: Props) {
             <TouchableOpacity
               key={res.id}
               style={[styles.card, idx === 0 && styles.cardFeatured]}
-              onPress={() => onRestaurantPress(res)}
+              onPress={() => navigation.navigate('RestaurantDetail', { restaurant: res })}
               activeOpacity={0.88}
             >
               {idx === 0 && (
