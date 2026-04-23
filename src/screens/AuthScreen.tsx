@@ -12,18 +12,30 @@ import {
   Image,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 import { Mail, Lock, User, ArrowRight, Zap } from 'lucide-react-native';
 
 const PRIMARY_COLOR = '#FBBF24'; // Yellow
 const BACKGROUND_COLOR = '#080808'; // Dark
 
 export default function AuthScreen() {
+  const { signInWithGoogle } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [error, setError] = useState<string | null>(null);
+
+  async function handleGoogleAuth() {
+    setLoading(true);
+    try {
+      await signInWithGoogle();
+    } catch (err: any) {
+      setError(err.message || 'Error con Google Auth');
+      setLoading(false);
+    }
+  }
 
   async function handleAuth() {
     setError(null);
@@ -132,7 +144,7 @@ export default function AuthScreen() {
           </View>
 
           <View style={styles.socialButtons}>
-            <TouchableOpacity style={styles.socialBtn}>
+            <TouchableOpacity style={styles.socialBtn} onPress={handleGoogleAuth} disabled={loading}>
               <Image 
                 source={{ uri: 'https://cdn-icons-png.flaticon.com/512/2991/2991148.png' }} 
                 style={styles.socialIcon} 

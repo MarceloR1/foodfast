@@ -19,7 +19,7 @@ export interface OrderItem {
   name: string;
 }
 
-export const createOrder = async (userId: string, restaurantId: string, total: number, items: any[]) => {
+export const createOrder = async (userId: string, restaurantId: string, total: number, items: any[], address?: string) => {
   // 1. Create order
   const { data: order, error: orderError } = await supabase
     .from('orders')
@@ -28,6 +28,7 @@ export const createOrder = async (userId: string, restaurantId: string, total: n
       restaurant_id: restaurantId,
       total_amount: total,
       status: 'pending',
+      delivery_address: address || 'Tegucigalpa, HN',
     })
     .select()
     .single();

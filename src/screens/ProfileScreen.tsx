@@ -8,6 +8,8 @@ import {
   Award, Package, HelpCircle, LogOut
 } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
+import EditProfileModal from '../components/EditProfileModal';
+import { getUserOrders } from '../services/orders';
 
 type RootStackParamList = {
   Profile: undefined;
@@ -17,6 +19,8 @@ type RootStackParamList = {
 interface Props {
   navigation: StackNavigationProp<RootStackParamList, 'Profile'>;
 }
+
+const PRIMARY_COLOR = '#FBBF24';
 
 const MENU_ITEMS = [
   { id: 'orders', icon: <Package size={20} color="#FBBF24" />, label: 'Mis Pedidos', count: 0 },
@@ -28,8 +32,17 @@ const MENU_ITEMS = [
 ];
 
 export default function ProfileScreen({ navigation }: Props) {
-  const { user, signOut } = useAuth();
-  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Invitado';
+  const { user, profile, signOut } = useAuth();
+  const [isEditVisible, setIsEditVisible] = React.useState(false);
+  const [orderCount, setOrderCount] = React.useState(0);
+  
+  const userName = profile?.full_name || user?.email?.split('@')[0] || 'Invitado';
+
+  React.useEffect(() => {
+    if (user) {
+      getUserOrders(user.id).then(orders => setOrderCount(orders.length));
+    }
+  }, [user]);
 
   const handleMenuPress = (id: string) => {
     if (id === 'orders') {
@@ -39,34 +52,46 @@ export default function ProfileScreen({ navigation }: Props) {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <EditProfileModal visible={isEditVisible} onClose={() => setIsEditVisible(false)} />
+      
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.avatarWrap}>
           <View style={styles.avatar}>
-            <User size={32} color="#FBBF24" />
+            {profile?.avatar_url ? (
+              <Image source={{ uri: profile.avatar_url }} style={{ width: 84, height: 84, borderRadius: 42 }} />
+            ) : (
+              <User size={32} color="#FBBF24" />
+            )}
           </View>
           <View style={styles.onlineDot} />
         </View>
         <Text style={styles.userName}>{userName}</Text>
         <Text style={styles.userEmail}>{user?.email || 'Inicia sesión para más opciones'}</Text>
         
-        {user ? (
-          <TouchableOpacity style={styles.logoutBtn} onPress={signOut} activeOpacity={0.85}>
-            <LogOut size={16} color="#EF4444" />
-            <Text style={styles.logoutBtnText}>Cerrar Sesión</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity style={styles.loginBtn} activeOpacity={0.85}>
-            <Text style={styles.loginBtnText}>Iniciar Sesión</Text>
-          </TouchableOpacity>
-        )}
+        <View style={styles.headerActions}>
+          {user ? (
+            <>
+              <TouchableOpacity style={styles.editBtn} onPress={() => setIsEditVisible(true)}>
+                <Text style={styles.editBtnText}>Editar Perfil</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.logoutBtn} onPress={signOut} activeOpacity={0.85}>
+                <LogOut size={16} color="#EF4444" />
+              </TouchableOpacity>
+            </>
+          ) : (
+            <TouchableOpacity style={styles.loginBtn} activeOpacity={0.85}>
+              <Text style={styles.loginBtnText}>Iniciar Sesión</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Stats */}
       <View style={styles.statsRow}>
         {[
-          { label: 'Pedidos', value: '12', icon: '📦' },
-          { label: 'Puntos', value: '1.2K', icon: '⭐' },
+          { label: 'Pedidos', value: orderCount.toString(), icon: '📦' },
+          { label: 'Puntos', value: profile?.points?.toString() || '0', icon: '⭐' },
           { label: 'Ahorrado', value: 'L1,200', icon: '💰' },
         ].map((s, i) => (
           <View key={i} style={styles.statCard}>
@@ -137,11 +162,21 @@ const styles = StyleSheet.create({
   },
   userName: { fontSize: 24, fontWeight: '900', color: '#FFF' },
   userEmail: { fontSize: 13, color: 'rgba(255,255,255,0.4)' },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 15 },
+  editBtn: {
+    backgroundColor: 'rgba(255,255,255,0.05)', paddingHorizontal: 16,
+    paddingVertical: 10, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+  },
+  editBtnText: { color: '#FFF', fontWeight: '700', fontSize: 13 },
+  loginBtn: {
+    backgroundColor: PRIMARY_COLOR, paddingHorizontal: 24,
+    paddingVertical: 12, borderRadius: 20,
+  },
   loginBtnText: { color: '#080808', fontWeight: '800', fontSize: 14 },
   logoutBtn: {
-    marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: 'rgba(239, 68, 68, 0.1)', paddingHorizontal: 20,
-    paddingVertical: 10, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.2)',
+    width: 44, height: 44, borderRadius: 22,
+    justifyContent: 'center', alignItems: 'center',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)', borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.2)',
   },
   logoutBtnText: { color: '#EF4444', fontWeight: '700', fontSize: 13 },
   statsRow: { flexDirection: 'row', paddingHorizontal: 16, gap: 10, marginBottom: 16 },

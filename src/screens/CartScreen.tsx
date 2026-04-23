@@ -11,6 +11,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 type RootStackParamList = {
   Home: undefined;
   Cart: undefined;
+  OrderTracking: undefined;
 };
 
 interface Props {
@@ -24,7 +25,7 @@ import { useAuth } from '../context/AuthContext';
 import { createOrder } from '../services/orders';
 
 export default function CartScreen({ navigation }: Props) {
-  const { items, updateQuantity, removeItem, clearCart, total, itemCount } = useCart();
+  const { items, updateQuantity, removeItem, clearCart, total, itemCount, deliveryAddress } = useCart();
   const { user } = useAuth();
   const [ordered, setOrdered] = useState(false);
   const [isOrdering, setIsOrdering] = useState(false);
@@ -43,17 +44,16 @@ export default function CartScreen({ navigation }: Props) {
     setIsOrdering(true);
     try {
       // Find restaurantId (assuming all items are from the same restaurant for now)
-      // For a real app, you'd handle multiple restaurants or force one at a time
-      const restaurantId = (items[0] as any).restaurant_id || '9ce988e4-8a12-4f2b-8a9d-547e7d6b8c9d'; // Fallback for safety
+      const restaurantId = (items[0] as any).restaurant_id || '9ce988e4-8a12-4f2b-8a9d-547e7d6b8c9d';
 
-      await createOrder(user.id, restaurantId, grandTotal, items);
+      await createOrder(user.id, restaurantId, grandTotal, items, deliveryAddress);
       
       setOrdered(true);
       setTimeout(() => {
         clearCart();
         setOrdered(false);
-        navigation.navigate('Home');
-      }, 3000);
+        navigation.navigate('OrderTracking');
+      }, 2500);
     } catch (err: any) {
       alert('Error al procesar el pedido: ' + err.message);
     } finally {

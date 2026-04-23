@@ -8,6 +8,7 @@ import { ShoppingBag, Home as HomeIcon, Search, User } from 'lucide-react-native
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { CartProvider, useCart } from './src/context/CartContext';
+import { FavoritesProvider } from './src/context/FavoritesContext';
 
 import Home from './src/screens/Home';
 import RestaurantDetail from './src/screens/RestaurantDetail';
@@ -16,6 +17,7 @@ import SearchScreen from './src/screens/SearchScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import AuthScreen from './src/screens/AuthScreen';
 import OrderHistoryScreen from './src/screens/OrderHistoryScreen';
+import OrderTracking from './src/screens/OrderTracking';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -99,6 +101,7 @@ function RootNavigator() {
             options={{ presentation: 'modal' }}
           />
           <Stack.Screen name="OrderHistory" component={OrderHistoryScreen} />
+          <Stack.Screen name="OrderTracking" component={OrderTracking} />
         </>
       )}
     </Stack.Navigator>
@@ -108,13 +111,15 @@ function RootNavigator() {
 export default function App() {
   return (
     <AuthProvider>
-      <CartProvider>
-        <SafeAreaProvider>
-          <NavigationContainer>
-            <RootNavigator />
-          </NavigationContainer>
-        </SafeAreaProvider>
-      </CartProvider>
+      <FavoritesProvider>
+        <CartProvider>
+          <SafeAreaProvider>
+            <NavigationContainer>
+              <RootNavigator />
+            </NavigationContainer>
+          </SafeAreaProvider>
+        </CartProvider>
+      </FavoritesProvider>
     </AuthProvider>
   );
 }

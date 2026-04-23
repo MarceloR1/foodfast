@@ -3,9 +3,11 @@ import {
   View, ScrollView, Image, TouchableOpacity, Text, StyleSheet,
   ActivityIndicator, Dimensions, Platform, Animated
 } from 'react-native';
-import { ShoppingBag, Star, Clock, Flame, TrendingUp, Zap } from 'lucide-react-native';
+import { ShoppingBag, Star, Clock, Flame, TrendingUp, Zap, ChevronDown, MapPin, Heart } from 'lucide-react-native';
 import { useCart } from '../context/CartContext';
+import { useFavorites } from '../context/FavoritesContext';
 import { getCategories, getFeaturedRestaurants, Category, Restaurant } from '../services/api';
+import AddressModal from '../components/AddressModal';
 
 const { width } = Dimensions.get('window');
 const FEAT_CARD_W = Math.min(width * 0.72, 280);
@@ -34,7 +36,10 @@ export default function Home({ navigation }: Props) {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const { itemCount } = useCart();
+  const [addressModalVisible, setAddressModalVisible] = useState(false);
+  
+  const { itemCount, deliveryAddress, setDeliveryAddress } = useCart();
+  const { favorites } = useFavorites();
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -76,30 +81,16 @@ export default function Home({ navigation }: Props) {
     extrapolate: 'clamp',
   });
 
-  if (!process.env.EXPO_PUBLIC_SUPABASE_URL || !process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY) {
-    return (
-      <View style={{ flex: 1, backgroundColor: '#080808', justifyContent: 'center', alignItems: 'center', padding: 40 }}>
-        <Text style={{ fontSize: 50, marginBottom: 20 }}>⚠️</Text>
-        <Text style={{ color: '#EF4444', fontSize: 20, fontWeight: '900', textAlign: 'center', marginBottom: 10 }}>Faltan Variables de Entorno</Text>
-        <Text style={{ color: '#FFF', fontSize: 14, textAlign: 'center', opacity: 0.7, lineHeight: 22 }}>
-          La app no puede conectar con Supabase. En producción o Netlify, debes agregar estas variables:
-        </Text>
-        <View style={{ backgroundColor: 'rgba(255,255,255,0.1)', padding: 16, borderRadius: 12, marginTop: 20, width: '100%' }}>
-          <Text style={{ color: '#FBBF24', fontSize: 12, fontWeight: '800' }}>EXPO_PUBLIC_SUPABASE_URL</Text>
-          <Text style={{ color: '#FBBF24', fontSize: 12, fontWeight: '800', marginTop: 10 }}>EXPO_PUBLIC_SUPABASE_ANON_KEY</Text>
-        </View>
-        <TouchableOpacity 
-          style={{ marginTop: 30, padding: 15, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12 }}
-          onPress={() => setLoading(true)}
-        >
-          <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Reintentar</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
+  const isSupabaseMissing = !process.env.EXPO_PUBLIC_SUPABASE_URL || !process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
   return (
     <View style={styles.container}>
+      <AddressModal 
+        visible={addressModalVisible} 
+        onClose={() => setAddressModalVisible(false)}
+        onSelect={(newAddr) => setDeliveryAddress(newAddr.includes('📍') ? newAddr : `📍 ${newAddr}`)}
+      />
+      
       {/* Sticky top accent */}
       <View style={styles.accentLine} />
 
@@ -107,12 +98,13 @@ export default function Home({ navigation }: Props) {
       <Animated.View style={[styles.header, { backgroundColor: headerBg }]} pointerEvents="box-none">
         <View style={styles.headerLeft}>
           <View style={styles.iconBg}><ShoppingBag size={17} color="#080808" /></View>
-          <View>
+          <TouchableOpacity style={styles.locationSelector} onPress={() => setAddressModalVisible(true)}>
             <Text style={styles.logoText}>Food<Text style={{ color: '#FBBF24' }}>Fast</Text></Text>
             <View style={styles.locationRow}>
-              <Text style={styles.locationText}>📍 Tegucigalpa, HN</Text>
+              <Text style={styles.locationText} numberOfLines={1}>{deliveryAddress}</Text>
+              <ChevronDown size={10} color="rgba(255,255,255,0.4)" />
             </View>
-          </View>
+          </TouchableOpacity>
         </View>
         <TouchableOpacity style={styles.cartBtn} onPress={() => navigation.navigate('Cart')} activeOpacity={0.8}>
           <ShoppingBag size={20} color="#FFF" />
@@ -130,6 +122,12 @@ export default function Home({ navigation }: Props) {
         onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
         contentContainerStyle={{ paddingBottom: 20 }}
       >
+        {isSupabaseMissing && (
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorBannerText}>⚠️ Configuración de Supabase incompleta</Text>
+          </View>
+        )}
+
         {/* Hero */}
         <View style={styles.hero}>
           <View style={{ height: Platform.OS === 'web' ? 60 : 52 }} />
@@ -215,6 +213,32 @@ export default function Home({ navigation }: Props) {
             <Text style={{ fontSize: 36, opacity: 0.45, marginTop: -8 }}>🍕</Text>
           </View>
         </View>
+
+        {/* Favorites Section */}
+        {favorites.length > 0 && (
+          <>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionTitleRow}>
+                <Heart size={16} color="#EF4444" fill="#EF4444" />
+                <Text style={styles.sectionTitle}>Mis Favoritos</Text>
+              </View>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.catScroll}>
+              {restaurants.filter(r => favorites.includes(r.id)).map(res => (
+                <TouchableOpacity
+                  key={res.id}
+                  style={styles.favCard}
+                  onPress={() => navigation.navigate('RestaurantDetail', { restaurant: res })}
+                  activeOpacity={0.8}
+                >
+                  <Image source={{ uri: res.image_url }} style={styles.favImg} />
+                  <View style={styles.favOverlay} />
+                  <Text style={styles.favText} numberOfLines={1}>{res.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </>
+        )}
 
         {/* Categories */}
         <View style={styles.sectionHeader}>
@@ -316,10 +340,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingTop: 10, paddingBottom: 10,
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  locationSelector: { flexShrink: 1 },
   iconBg: { backgroundColor: '#FBBF24', padding: 7, borderRadius: 10 },
   logoText: { fontSize: 20, fontWeight: '900', color: '#FFF', letterSpacing: -0.5 },
   locationRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 0 },
-  locationText: { fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: '600' },
+  locationText: { fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: '600', maxWidth: 180 },
+  errorBanner: {
+    backgroundColor: 'rgba(239,68,68,0.1)',
+    marginHorizontal: 20,
+    marginTop: 10,
+    padding: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(239,68,68,0.2)',
+    alignItems: 'center',
+  },
+  errorBannerText: { color: '#EF4444', fontSize: 12, fontWeight: '700' },
   cartBtn: {
     width: 44, height: 44, borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.07)', justifyContent: 'center', alignItems: 'center',
@@ -431,6 +467,16 @@ const styles = StyleSheet.create({
   catImg: { ...StyleSheet.absoluteFillObject },
   catOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.52)' },
   catText: { color: '#FFF', fontSize: 11, fontWeight: '800', textAlign: 'center', paddingBottom: 8, paddingHorizontal: 4 },
+
+  // Favorites
+  favCard: {
+    width: 100, height: 100, borderRadius: 24, overflow: 'hidden',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    justifyContent: 'flex-end', padding: 10,
+  },
+  favImg: { ...StyleSheet.absoluteFillObject },
+  favOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.4)' },
+  favText: { color: '#FFF', fontSize: 10, fontWeight: '800', textAlign: 'center' },
 
   // Cards
   list: { paddingHorizontal: 16, gap: 12 },

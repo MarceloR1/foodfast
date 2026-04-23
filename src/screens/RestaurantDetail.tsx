@@ -3,8 +3,9 @@ import {
   View, ScrollView, Image, TouchableOpacity, Text, StyleSheet,
   ActivityIndicator, Platform, Animated, Dimensions
 } from 'react-native';
-import { ArrowLeft, Star, Clock, ShoppingCart, Plus, Check, Flame } from 'lucide-react-native';
+import { ArrowLeft, Star, Clock, ShoppingCart, Plus, Check, Flame, Heart } from 'lucide-react-native';
 import { useCart } from '../context/CartContext';
+import { useFavorites } from '../context/FavoritesContext';
 import { getMenuItems, MenuItem, Restaurant } from '../services/api';
 
 const { width } = Dimensions.get('window');
@@ -29,6 +30,7 @@ export default function RestaurantDetail({ navigation, route }: Props) {
   const [loading, setLoading] = useState(true);
   const [addedId, setAddedId] = useState<string | null>(null);
   const { addItem, itemCount, total } = useCart();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const scrollY = useRef(new Animated.Value(0)).current;
 
   // Header opacity based on scroll
@@ -69,12 +71,17 @@ export default function RestaurantDetail({ navigation, route }: Props) {
           <ArrowLeft size={20} color="#FFF" />
         </TouchableOpacity>
         <Text style={styles.floatingTitle} numberOfLines={1}>{restaurant.name}</Text>
-        <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Cart')} activeOpacity={0.8}>
-          <ShoppingCart size={20} color="#FFF" />
-          {itemCount > 0 && (
-            <View style={styles.badge}><Text style={styles.badgeText}>{itemCount}</Text></View>
-          )}
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <TouchableOpacity style={styles.iconBtn} onPress={() => toggleFavorite(restaurant.id)} activeOpacity={0.8}>
+            <Heart size={20} color={isFavorite(restaurant.id) ? '#FBBF24' : '#FFF'} fill={isFavorite(restaurant.id) ? '#FBBF24' : 'transparent'} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Cart')} activeOpacity={0.8}>
+            <ShoppingCart size={20} color="#FFF" />
+            {itemCount > 0 && (
+              <View style={styles.badge}><Text style={styles.badgeText}>{itemCount}</Text></View>
+            )}
+          </TouchableOpacity>
+        </View>
       </Animated.View>
 
       <Animated.ScrollView
